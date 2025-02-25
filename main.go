@@ -13,11 +13,11 @@ import (
 var (
 	counter int
 	mu      sync.Mutex
-	peers   []string
+	peers   = make(map[string]bool)
 )
 
 func main() {
-	// Get port and peers from environment variables (or command-line arguments)
+	// Get port and peers from environment variables / command-line arguments
 	port := os.Getenv("PORT")
 	if port == "" {
 		fmt.Println("❌ PORT not set, using default 8088")
@@ -26,33 +26,99 @@ func main() {
 
 	peerList := os.Getenv("PEERS")
 	if peerList != "" {
-		peers = strings.Split(peerList, ",")
+		for _, peer := range strings.Split(peerList, ",") {
+			peers[peer] = true
+		}
 	}
 
-	fmt.Printf("📡 Node started on port %s, Peers: %v\n", port, peers)
+	if len(os.Args) > 1 && strings.HasPrefix(os.Args[1], "--peers=") {
+		peerList := strings.TrimPrefix(os.Args[1], "--peers=")
+		for _, peer := range strings.Split(peerList, ",") {
+			peers[peer] = true
+		}
+	}
 
-	// Primary endpoints
-	http.HandleFunc("/count", countHandler)
-	http.HandleFunc("/increment", incrementHandler)
-	http.HandleFunc("/sync", syncHandler)
+	// Start background health check for peers
+	go healthCheckPeers()
+	fmt.Printf("📡 Node started on port %s, Peers: %v\n", port, getPeerList())
+
 	http.HandleFunc("/register", registerPeer)
 	http.HandleFunc("/peers", getPeers)
 	http.HandleFunc("/remove-peer", removePeer)
-
-	// Duplicate endpoint registrations using wrapper functions.
-	// (Because of duplicate registrations, these will override the above ones.)
-	http.HandleFunc("/increment", incrementCounter)
-	http.HandleFunc("/count", getCounter)
-	http.HandleFunc("/sync", syncCounter)
+	http.HandleFunc("/increment", incrementHandler)
+	http.HandleFunc("/count", countHandler)
+	http.HandleFunc("/sync", syncHandler)
 	http.HandleFunc("/health", healthCheck)
-
 	serverAddr := fmt.Sprintf(":%s", port)
 	if err := http.ListenAndServe(serverAddr, nil); err != nil {
 		fmt.Printf("❌ Server failed: %v\n", err)
 	}
 }
 
-// countHandler returns the current counter.
+// getPeerList returns the list of peer IDs as a slice.
+func getPeerList() []string {
+	peerList := make([]string, 0, len(peers))
+	for p := range peers {
+		peerList = append(peerList, p)
+	}
+	return peerList
+}
+
+func getPeers(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(getPeerList())
+}
+
+// healthCheckPeers periodically checks if peers are alive.
+func healthCheckPeers() {
+	for {
+		time.Sleep(5 * time.Second)
+		for peer := range peers {
+			url := fmt.Sprintf("http://%s/health", peer)
+			_, err := http.Get(url)
+			if err != nil {
+				delete(peers, peer)
+				fmt.Printf("Removed dead peer: %s\n", peer)
+			}
+		}
+	}
+}
+
+// healthCheck is a simple endpoint to check node health.
+func healthCheck(w http.ResponseWriter, _ *http.Request) {
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+// removePeer removes a peer based on the provided ID.
+func removePeer(w http.ResponseWriter, r *http.Request) {
+	var peer struct {
+		ID string `json:"id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&peer); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	delete(peers, peer.ID)
+	fmt.Printf("Removed peer: %s\n", peer.ID)
+	w.WriteHeader(http.StatusOK)
+}
+
+// registerPeer adds a new peer.
+func registerPeer(w http.ResponseWriter, r *http.Request) {
+	var peer struct {
+		ID string `json:"id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&peer); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	peers[peer.ID] = true
+	fmt.Printf("Registered peer: %s\n", peer.ID)
+	w.WriteHeader(http.StatusOK)
+}
+
+// countHandler returns the current counter value.
 func countHandler(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -61,38 +127,36 @@ func countHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// incrementHandler increments the counter locally and propagates the update.
+// incrementHandler increments the counter and propagates the change.
 func incrementHandler(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	counter++
-	currentCount := counter
 	mu.Unlock()
 
-	fmt.Printf("✅ Counter incremented: %d\n", currentCount)
+	fmt.Printf("✅ Counter incremented: %d\n", counter)
 
-	// Propagate increment to all peers concurrently.
+	// Propagate increment to all peers concurrently
 	var wg sync.WaitGroup
-	for _, peer := range peers {
+	for peer := range peers {
 		wg.Add(1)
 		go propagateIncrement(peer, &wg)
 	}
-	wg.Wait() // Wait for all propagations to complete
 
+	wg.Wait() // Wait for all propagations to complete
 	w.WriteHeader(http.StatusOK)
 }
 
-// syncHandler updates the counter when receiving a sync request from a peer.
+// syncHandler updates the counter locally when a peer propagates an increment.
 func syncHandler(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	counter++
-	currentCount := counter
 	mu.Unlock()
 
-	fmt.Printf("🔄 Counter synced from peer, new value: %d\n", currentCount)
+	fmt.Printf("🔄 Counter synced from peer, new value: %d\n", counter)
 	w.WriteHeader(http.StatusOK)
 }
 
-// propagateIncrement sends a sync request to a peer to update its counter.
+// propagateIncrement sends an increment request to a peer.
 func propagateIncrement(peer string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -102,7 +166,6 @@ func propagateIncrement(peer string, wg *sync.WaitGroup) {
 	for i := 0; i < 3; i++ {
 		fmt.Printf("🔄 Propagating increment to %s (Attempt %d)\n", peer, i+1)
 		resp, err := client.Post(url, "application/json", nil)
-
 		if err == nil && resp.StatusCode == http.StatusOK {
 			fmt.Printf("✅ Increment propagated to %s\n", peer)
 			return
@@ -113,93 +176,4 @@ func propagateIncrement(peer string, wg *sync.WaitGroup) {
 	}
 
 	fmt.Printf("❌ Final failure: Could not propagate increment to %s\n", peer)
-}
-
-// registerPeer registers a new peer.
-// It expects a POST request with JSON body: {"peer": "address:port"}.
-func registerPeer(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
-		return
-	}
-	var data struct {
-		Peer string `json:"peer"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
-	}
-	mu.Lock()
-	defer mu.Unlock()
-
-	// Check if peer already exists.
-	for _, p := range peers {
-		if p == data.Peer {
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, "Peer already registered")
-			return
-		}
-	}
-	peers = append(peers, data.Peer)
-	fmt.Printf("🔗 Peer registered: %s\n", data.Peer)
-	w.WriteHeader(http.StatusCreated)
-}
-
-// getPeers returns the list of registered peers.
-func getPeers(w http.ResponseWriter, r *http.Request) {
-	mu.Lock()
-	defer mu.Unlock()
-	json.NewEncoder(w).Encode(peers)
-}
-
-// removePeer removes a peer from the registered list.
-// It expects a POST request with JSON body: {"peer": "address:port"}.
-func removePeer(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
-		return
-	}
-	var data struct {
-		Peer string `json:"peer"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
-	}
-	mu.Lock()
-	defer mu.Unlock()
-
-	for i, p := range peers {
-		if p == data.Peer {
-			peers = append(peers[:i], peers[i+1:]...)
-			fmt.Printf("🗑️ Peer removed: %s\n", data.Peer)
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-	}
-	http.Error(w, "Peer not found", http.StatusNotFound)
-}
-
-// healthCheck provides a simple health check endpoint.
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "OK")
-}
-
-// The following wrapper functions call the original handlers.
-// They are registered last and override the earlier registrations.
-
-// incrementCounter wraps the incrementHandler.
-func incrementCounter(w http.ResponseWriter, r *http.Request) {
-	incrementHandler(w, r)
-}
-
-// getCounter wraps the countHandler.
-func getCounter(w http.ResponseWriter, r *http.Request) {
-	countHandler(w, r)
-}
-
-// syncCounter wraps the syncHandler.
-func syncCounter(w http.ResponseWriter, r *http.Request) {
-	syncHandler(w, r)
 }

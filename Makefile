@@ -26,10 +26,11 @@ logs:
 
 test-health:
 	@echo "🩺 Checking health of all nodes..."
-	@echo "Node1:"; curl -s http://localhost:$(PORT_1)/health | jq || echo "Health check failed for node1"
-	@echo "Node2:"; curl -s http://localhost:$(PORT_2)/health | jq || echo "Health check failed for node2"
-	@echo "Node3:"; curl -s http://localhost:$(PORT_3)/health | jq || echo "Health check failed for node3"
+	@echo "Node1:"; curl -s http://localhost:$(PORT_1)/health || echo "Health check failed for node1"
+	@echo "Node2:"; curl -s http://localhost:$(PORT_2)/health || echo "Health check failed for node2"
+	@echo "Node3:"; curl -s http://localhost:$(PORT_3)/health || echo "Health check failed for node3"
 	@echo "✅ Health check completed!"
+
 
 test-sync:
 	@echo "🔄 Testing sync API on all nodes..."
