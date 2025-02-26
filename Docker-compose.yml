@@ -1,12 +1,13 @@
+version: '3.8'
 services:
   node1:
     build: .
     container_name: node1
     environment:
-      - PORT=8088
-      - PEERS=node2:8089,node3:8090
+      PORT: "8088"
+      PEERS: "node2:8089,node3:8090"
     ports:
-      - "9088:8088"   # Map container port 8088 to host port 9088
+      - "9088:8088"   # Exposes container port 8088 on host port 9088
     networks:
       - mynetwork
 
@@ -14,10 +15,10 @@ services:
     build: .
     container_name: node2
     environment:
-      - PORT=8089
-      - PEERS=node1:9088,node3:8090
+      PORT: "8089"
+      PEERS: "node1:8088,node3:8090"
     ports:
-      - "9089:8089"   # Using host port 9089 for node2
+      - "9089:8089"   # Exposes container port 8089 on host port 9089
     networks:
       - mynetwork
 
@@ -25,10 +26,10 @@ services:
     build: .
     container_name: node3
     environment:
-      - PORT=8090
-      - PEERS=node1:9088,node2:9089
+      PORT: "8090"
+      PEERS: "node1:8088,node2:8089"
     ports:
-      - "9090:8090"   # Map container port 8090 to host port 9090
+      - "9090:8090"   # Exposes container port 8090 on host port 9090
     networks:
       - mynetwork
 

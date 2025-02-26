@@ -1,4 +1,4 @@
-.PHONY: build start stop restart logs test test-health test-sync test-increment test-count test-full remove-containers
+.PHONY: build start stop restart logs test-health test-sync test-increment test-count test-peers test-all-peers test-full remove-containers
 
 # Updated host ports to match docker-compose mappings:
 # node1 is accessible at host port 9088, node2 at 9089, node3 at 9090.
@@ -31,7 +31,6 @@ test-health:
 	@echo "Node3:"; curl -s http://localhost:$(PORT_3)/health || echo "Health check failed for node3"
 	@echo "✅ Health check completed!"
 
-
 test-sync:
 	@echo "🔄 Testing sync API on all nodes..."
 	@curl -X POST http://localhost:$(PORT_1)/sync
@@ -53,9 +52,25 @@ test-count:
 	@echo "Node3:"; curl -s http://localhost:$(PORT_3)/count | jq || echo "Count check failed for node3"
 	@echo "✅ Count API test completed!"
 
-test-full: test-health test-increment test-sync test-count
+test-peers:
+	@echo "🔍 Testing /peers endpoint on Node1 after manual registration..."
+	@echo "Registering a peer 'test-peer' on Node1..."
+	@curl -X POST -H "Content-Type: application/json" -d '{"id": "test-peer"}' http://localhost:$(PORT_1)/register
+	@sleep 1
+	@echo "\nListing peers for Node1:"
+	@curl -s http://localhost:$(PORT_1)/peers | jq .
+	@echo "\n✅ /peers test completed!"
+
+test-all-peers:
+	@echo "🔍 Listing peers for all nodes..."
+	@echo "Node1 peers:"; curl -s http://localhost:$(PORT_1)/peers | jq . || echo "Failed to get peers for node1"
+	@echo "Node2 peers:"; curl -s http://localhost:$(PORT_2)/peers | jq . || echo "Failed to get peers for node2"
+	@echo "Node3 peers:"; curl -s http://localhost:$(PORT_3)/peers | jq . || echo "Failed to get peers for node3"
+	@echo "✅ All nodes peers listed!"
+
+test-full: test-health test-increment test-sync test-count test-peers test-all-peers
 	@echo "🎯 Full test sequence completed!"
 
 remove-containers:
 	@echo "🗑️ Removing containers for node1, node2, and node3..."
-	@docker rm -f node1 node2 node3 || echo "No such containers found
+	@docker rm -f node1 node2 node3 || echo "No such containers found"
