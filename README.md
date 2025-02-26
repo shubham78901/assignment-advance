@@ -1,9 +1,7 @@
 
 
-Run [make build]
+Run [make]
 
-
-Run [make start]
 
 
 Run [make test-full]
