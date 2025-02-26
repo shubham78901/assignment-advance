@@ -16,8 +16,7 @@ RUN go mod tidy
 # Copy the rest of the source code
 COPY . .
 
-# Expose the ports used by your application
-EXPOSE 8088 8089 8090
+
 
 # Default command (can be overridden in docker-compose)
 CMD ["go", "run", "main.go"]
