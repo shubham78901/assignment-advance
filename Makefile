@@ -6,6 +6,8 @@ PORT_1=9088
 PORT_2=9089
 PORT_3=9090
 
+make :stop build  start
+
 build:
 	@echo "🔨 Building Docker images..."
 	docker-compose build
@@ -13,6 +15,8 @@ build:
 start:
 	@echo "🚀 Starting all nodes..."
 	docker-compose up -d
+
+
 
 stop:
 	@echo "🛑 Stopping all nodes..."
@@ -33,11 +37,21 @@ test-health:
 
 test-sync:
 	@echo "🔄 Testing sync API on all nodes..."
-	@curl -X POST http://localhost:$(PORT_1)/sync
-	@curl -X POST http://localhost:$(PORT_2)/sync
-	@curl -X POST http://localhost:$(PORT_3)/sync
-	@sleep 2
-	@echo "✅ Sync API test completed!"
+	@{ \
+	  count1=`curl -s http://localhost:$(PORT_1)/count | jq '.count'`; \
+	  echo "Syncing node1 with count $$count1"; \
+	  curl -X POST -H "Content-Type: application/json" -d "{\"count\": $$count1}" http://localhost:$(PORT_1)/sync; \
+	  count2=`curl -s http://localhost:$(PORT_2)/count | jq '.count'`; \
+	  echo "Syncing node2 with count $$count2"; \
+	  curl -X POST -H "Content-Type: application/json" -d "{\"count\": $$count2}" http://localhost:$(PORT_2)/sync; \
+	  count3=`curl -s http://localhost:$(PORT_3)/count | jq '.count'`; \
+	  echo "Syncing node3 with count $$count3"; \
+	  curl -X POST -H "Content-Type: application/json" -d "{\"count\": $$count3}" http://localhost:$(PORT_3)/sync; \
+	}; \
+	sleep 2; \
+	echo "✅ Sync API test completed!"
+
+
 
 test-increment:
 	@echo "📈 Incrementing counter on Node1..."
