@@ -1,23 +1,30 @@
-# Use the official Golang image with Go 1.22 on Alpine
-FROM golang:1.22-alpine
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-# Copy the go.mod file
+# Copy go mod and sum files
 COPY go.mod ./
 
-# (Optional) Adjust the go.mod version if necessary.
-# This sed command strips off any patch version so "go 1.22.6" becomes "go 1.22"
-RUN sed -i -E 's/^(go [0-9]+\.[0-9]+)\.[0-9]+/\1/' go.mod
+# Download dependencies
+RUN go mod download
 
-# Download dependencies and generate go.sum
-RUN go mod tidy
-
-# Copy the rest of the source code
+# Copy source code
 COPY . .
 
-# Expose the ports used by your application
-EXPOSE 8088 8089 8090
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -o /counter ./cmd/counter
 
-# Default command (can be overridden in docker-compose)
-CMD ["go", "run", "main.go"]
+# Create final lightweight image
+FROM alpine:latest
+
+WORKDIR /
+
+# Copy binary from builder stage
+COPY --from=builder /counter /counter
+
+# Expose service and discovery ports
+EXPOSE 8088
+EXPOSE 8089/udp
+
+# Set entrypoint
+ENTRYPOINT ["/counter"]
