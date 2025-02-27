@@ -6,17 +6,17 @@ WORKDIR /app
 # Copy the go.mod file
 COPY go.mod ./
 
-# (Optional) Adjust the go.mod version if necessary.
-# This sed command strips off any patch version so "go 1.22.6" becomes "go 1.22"
+# Adjust the Go version in go.mod if necessary
 RUN sed -i -E 's/^(go [0-9]+\.[0-9]+)\.[0-9]+/\1/' go.mod
 
 # Download dependencies and generate go.sum
 RUN go mod tidy
 
-# Copy the rest of the source code
+# Copy the entire source code
 COPY . .
 
-
+# Set the working directory to `api` where `main.go` is located
+WORKDIR /app/api
 
 # Default command (can be overridden in docker-compose)
 CMD ["go", "run", "main.go"]
