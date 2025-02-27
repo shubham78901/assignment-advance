@@ -1,36 +1,66 @@
+version: '3'
+
 services:
+  discovery:
+    build: 
+      context: . 
+      dockerfile: DockerfileDiscovery
+    container_name: discovery
+    ports:
+      - "9000:8000"   # Discovery service API port
+    networks:
+      - mynetwork
+    environment:
+      - PORT=8000
+      - SERVICE_TYPE=discovery
+
   node1:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: node1
     environment:
-      PORT: "8088"
+      - PORT=8088
+      - DISCOVERY_URL=http://discovery:8000
+      - NODE_ID=node1
     ports:
       - "9088:8088"   # Service port
-      - "9188:8089"   # Discovery port
     networks:
       - mynetwork
+    depends_on:
+      - discovery
 
   node2:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: node2
     environment:
-      PORT: "8089"
+      - PORT=8089
+      - DISCOVERY_URL=http://discovery:8000
+      - NODE_ID=node2
     ports:
       - "9089:8089"   # Service port
-      - "9189:8089"   # Discovery port
     networks:
       - mynetwork
+    depends_on:
+      - discovery
 
   node3:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: node3
     environment:
-      PORT: "8090"
+      - PORT=8090
+      - DISCOVERY_URL=http://discovery:8000
+      - NODE_ID=node3
     ports:
       - "9090:8090"   # Service port
-      - "9190:8089"   # Discovery port
     networks:
       - mynetwork
+    depends_on:
+      - discovery
 
 networks:
   mynetwork:

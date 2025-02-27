@@ -4,8 +4,8 @@ WORKDIR /app
 
 COPY  . .
 
-# Build the node service
-RUN go build -o node node.go
+# Build the discovery service
+RUN go build -o discovery discovery.go
 
 # Create a minimal production image
 FROM alpine:latest
@@ -13,10 +13,10 @@ FROM alpine:latest
 WORKDIR /app
 
 # Copy the binary from the builder stage
-COPY --from=builder /app/node .
+COPY --from=builder /app/discovery .
 
 # Expose the default port
-EXPOSE 8088
+EXPOSE 8000
 
-# Run the node service
-CMD ["./node"]
+# Run the discovery service
+CMD ["./discovery"]
