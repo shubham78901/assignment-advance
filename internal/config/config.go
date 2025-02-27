@@ -19,7 +19,7 @@ type Config struct {
 // Initialize sets up the configuration from environment variables and command-line arguments
 func Initialize() *Config {
 	cfg := &Config{
-		DiscoveryPort:    8089,
+		DiscoveryPort:    7000,
 		DiscoveryEnabled: true,
 	}
 

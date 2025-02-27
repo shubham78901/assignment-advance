@@ -6,7 +6,6 @@ services:
       PORT: "8088"
     ports:
       - "9088:8088"   # Service port
-      - "9188:8089"   # Discovery port
     networks:
       - mynetwork
 
@@ -17,7 +16,7 @@ services:
       PORT: "8089"
     ports:
       - "9089:8089"   # Service port
-      - "9189:8089"   # Discovery port
+
     networks:
       - mynetwork
 
@@ -28,7 +27,6 @@ services:
       PORT: "8090"
     ports:
       - "9090:8090"   # Service port
-      - "9190:8089"   # Discovery port
     networks:
       - mynetwork
 
