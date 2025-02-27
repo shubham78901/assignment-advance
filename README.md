@@ -1,5 +1,48 @@
 
+# Distributed Counter
 
+A distributed counter service that maintains consistent counts across multiple nodes.
+
+## Features
+
+- Peer-to-peer architecture
+- Automatic service discovery via UDP multicast
+- HTTP API for counter operations
+- Automatic peer health checking
+- Counter value propagation to maintain consistency
+
+## Getting Started
+
+### Prerequisites
+
+- Go 1.21 or higher
+- Docker (optional for containerized deployment)
+
+
+## API Endpoints
+
+- `GET /count` - Get the current counter value
+- `POST /increment` - Increment the counter
+- `POST /sync` - Sync counter with provided value
+- `GET /peers` - List all known peers
+- `POST /register` - Register a new peer
+- `POST /remove-peer` - Remove a peer
+- `GET /health` - Check node health
+- `GET /discovery` - Get discovery information
+
+## Architecture
+
+The system is designed with the following components:
+
+- **Config**: Application configuration and node identification
+- **Counter**: Manages the counter value with thread-safe operations
+- **Discovery**: Handles peer discovery via UDP broadcasts
+- **Peers**: Manages peer connections and health checks
+- **Handlers**: HTTP API handlers for all endpoints
+
+## License
+
+MIT
 Run [make]
 
 
