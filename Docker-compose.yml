@@ -1,36 +1,46 @@
+version: '3.8'
 services:
   node1:
-    build: .
-    container_name: node1
+    image: assignment-advance-node1
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
-      PORT: "8088"
-    ports:
-      - "9088:8088"   # Service port
-      - "9188:8089"   # Discovery port
+      - PORT=8081
+      - DISCOVERY_PORT=8089
+      - PEERS=node2:8082,node3:8083
     networks:
       - mynetwork
+    ports:
+      - "8081:8081"
 
   node2:
-    build: .
-    container_name: node2
+    image: assignment-advance-node2
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
-      PORT: "8089"
-    ports:
-      - "9089:8089"   # Service port
-      - "9189:8089"   # Discovery port
+      - PORT=8082
+      - DISCOVERY_PORT=8089
+      - PEERS=node1:8081,node3:8083
     networks:
       - mynetwork
+    ports:
+      - "8082:8082"
 
   node3:
-    build: .
-    container_name: node3
+    image: assignment-advance-node3
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
-      PORT: "8090"
-    ports:
-      - "9090:8090"   # Service port
-      - "9190:8089"   # Discovery port
+      - PORT=8083
+      - DISCOVERY_PORT=8089
+      - PEERS=node1:8081,node2:8082
     networks:
       - mynetwork
+    ports:
+      - "8083:8083"
 
 networks:
   mynetwork:
