@@ -8,6 +8,8 @@ PORT_3=9090
 TEST_NODE_PORT=9091
 TEST_NODE_NAME=discovery-test-node
 
+make: stop build start
+
 build:
 	@echo "🔨 Building Docker images..."
 	docker-compose build
@@ -50,7 +52,7 @@ test-sync:
 	}; \
 	sleep 2; \
 	echo "✅ Sync API test completed!"
-	
+
 test-increment:
 	@echo "📈 Incrementing counter on Node1..."
 	@curl -X POST http://localhost:$(PORT_1)/increment
@@ -80,7 +82,6 @@ test-all-peers:
 	@echo "Node3 peers:"; curl -s http://localhost:$(PORT_3)/peers | jq . || echo "Failed to get peers for node3"
 	@echo "✅ All nodes peers listed!"
 
-# Clean up any test nodes that might exist from previous runs
 clean-test-node:
 	@echo "🧹 Cleaning up any previous test nodes..."
 	@docker rm -f $(TEST_NODE_NAME) 2>/dev/null || true
@@ -92,7 +93,8 @@ test-discovery: clean-test-node
 	
 	@echo "\n2. Testing auto-discovery by adding a new node dynamically..."
 	@echo "Starting a new container $(TEST_NODE_NAME) without explicitly connecting it to others..."
-	@docker run -d --name $(TEST_NODE_NAME) --network mynetwork -e PORT=8091 -p $(TEST_NODE_PORT):8091 -p 9191:8089 $$(docker-compose images -q node1)
+	@NETWORK_NAME=$$(docker network ls --filter name=mynetwork --format "{{.Name}}") && \
+	docker run -d --name $(TEST_NODE_NAME) --network $$NETWORK_NAME -e PORT=8091 -p $(TEST_NODE_PORT):8091 -p 9191:8089 assignment-advance-node1
 	
 	@echo "\n3. Waiting for discovery to propagate (15 seconds)..."
 	@sleep 15
