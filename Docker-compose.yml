@@ -1,13 +1,12 @@
-version: '3.8'
 services:
   node1:
     build: .
     container_name: node1
     environment:
       PORT: "8088"
-      PEERS: "node2:8089,node3:8090"
     ports:
-      - "9088:8088"   # Exposes container port 8088 on host port 9088
+      - "9088:8088"   # Service port
+      - "9188:8089"   # Discovery port
     networks:
       - mynetwork
 
@@ -16,9 +15,9 @@ services:
     container_name: node2
     environment:
       PORT: "8089"
-      PEERS: "node1:8088,node3:8090"
     ports:
-      - "9089:8089"   # Exposes container port 8089 on host port 9089
+      - "9089:8089"   # Service port
+      - "9189:8089"   # Discovery port
     networks:
       - mynetwork
 
@@ -27,9 +26,9 @@ services:
     container_name: node3
     environment:
       PORT: "8090"
-      PEERS: "node1:8088,node2:8089"
     ports:
-      - "9090:8090"   # Exposes container port 8090 on host port 9090
+      - "9090:8090"   # Service port
+      - "9190:8089"   # Discovery port
     networks:
       - mynetwork
 
