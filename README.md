@@ -113,6 +113,241 @@ The system exposes the following HTTP endpoints:
 
 
 
+(base) shubhamgautam@shubhams-MacBook-Air assignment-advance % make test-full
+🩺 Checking health of all nodes...
+Node1:
+{
+  "node_id": "172.18.0.4:8088",
+  "status": "ok"
+}
+Node2:
+{
+  "node_id": "172.18.0.2:8089",
+  "status": "ok"
+}
+Node3:
+{
+  "node_id": "172.18.0.3:8090",
+  "status": "ok"
+}
+✅ Health check completed!
+📈 Incrementing counter on Node1...
+{"count":1,"node_id":"172.18.0.4:8088"}
+✅ Increment API test completed!
+🔄 Testing sync API on all nodes...
+Syncing node1 with count 1
+Syncing node2 with count 1
+Syncing node3 with count 1
+✅ Sync API test completed!
+🔍 Fetching count from all nodes...
+Node1:
+{
+  "count": 1,
+  "node_id": "172.18.0.4:8088"
+}
+Node2:
+{
+  "count": 1,
+  "node_id": "172.18.0.2:8089"
+}
+Node3:
+{
+  "count": 1,
+  "node_id": "172.18.0.3:8090"
+}
+✅ Count API test completed!
+🔍 Listing peers for all nodes...
+Node1 peers:
+[
+  "172.18.0.3:8090",
+  "172.18.0.2:8089"
+]
+Node2 peers:
+[
+  "172.18.0.3:8090",
+  "172.18.0.4:8088"
+]
+Node3 peers:
+[
+  "172.18.0.4:8088",
+  "172.18.0.2:8089"
+]
+✅ All nodes peers listed!
+🧹 Cleaning up any previous test nodes...
+🔍 Testing service discovery...
+
+1. Checking discovery endpoint for Node1:
+{
+  "node_id": "172.18.0.4:8088",
+  "peers": [
+    "172.18.0.3:8090",
+    "172.18.0.2:8089"
+  ]
+}
+
+2. Testing auto-discovery by adding a new node dynamically...
+Starting a new container discovery-test-node without explicitly connecting it to others...
+7eaf1c9c3102f95d6d784e305646ed20c062d94715b9af7e6f4e5390a21c4b8d
+
+3. Waiting for discovery to propagate (15 seconds)...
+
+4. Checking if the new node was discovered by existing nodes:
+Node1 peers:
+[
+  "172.18.0.3:8090",
+  "172.18.0.2:8089",
+  "172.18.0.5:8091"
+]
+Node2 peers:
+[
+  "172.18.0.3:8090",
+  "172.18.0.4:8088",
+  "172.18.0.5:8091"
+]
+Node3 peers:
+[
+  "172.18.0.4:8088",
+  "172.18.0.2:8089",
+  "172.18.0.5:8091"
+]
+
+5. Checking if the new node discovered existing nodes:
+Test node peers:
+[
+  "172.18.0.4:8088",
+  "172.18.0.3:8090",
+  "172.18.0.2:8089"
+]
+
+6. Testing counter propagation to the new node...
+Incrementing counter on Node1...
+{"count":2,"node_id":"172.18.0.4:8088"}
+
+Checking counter value on all nodes including the new one:
+Node1 count:
+{
+  "count": 2,
+  "node_id": "172.18.0.4:8088"
+}
+Node2 count:
+{
+  "count": 2,
+  "node_id": "172.18.0.2:8089"
+}
+Node3 count:
+{
+  "count": 2,
+  "node_id": "172.18.0.3:8090"
+}
+Test node count:
+{
+  "count": 2,
+  "node_id": "172.18.0.5:8091"
+}
+
+7. Cleaning up the dynamically added node...
+discovery-test-node
+discovery-test-node
+
+✅ Service discovery test completed!
+🔍 Testing removal of an existing peer...
+1. Checking current peers on all nodes:
+Node1 peers:
+[
+  "172.18.0.5:8091",
+  "172.18.0.3:8090",
+  "172.18.0.2:8089"
+]
+Node2 peers:
+[
+  "172.18.0.3:8090",
+  "172.18.0.4:8088",
+  "172.18.0.5:8091"
+]
+Node3 peers:
+[
+  "172.18.0.2:8089",
+  "172.18.0.5:8091",
+  "172.18.0.4:8088"
+]
+
+2. Removing Node3 from Node1 and Node2's peer lists...
+Node3 ID: 172.18.0.3:8090
+
+3. Verifying Node3 was removed from peer lists:
+Node1 peers:
+[
+  "172.18.0.2:8089",
+  "172.18.0.5:8091"
+]
+Node2 peers:
+[
+  "172.18.0.5:8091",
+  "172.18.0.4:8088"
+]
+
+4. Testing counter propagation with removed peer...
+Incrementing counter on Node1...
+{"count":3,"node_id":"172.18.0.4:8088"}
+
+5. Checking if counter updated on Node2 but not on Node3:
+Node1 count:
+{
+  "count": 3,
+  "node_id": "172.18.0.4:8088"
+}
+Node2 count:
+{
+  "count": 3,
+  "node_id": "172.18.0.2:8089"
+}
+Node3 count:
+{
+  "count": 2,
+  "node_id": "172.18.0.3:8090"
+}
+
+6. Re-adding Node3 to restore network...
+
+7. Verifying Node3 was added back:
+Node1 peers:
+[
+  "172.18.0.3:8090",
+  "172.18.0.2:8089"
+]
+Node2 peers:
+[
+  "172.18.0.3:8090",
+  "172.18.0.4:8088"
+]
+
+8. Explicitly syncing Node3 with the current counter value...
+Current count from Node1: 3
+
+9. Verifying all nodes have the same counter value:
+Node1 count:
+{
+  "count": 3,
+  "node_id": "172.18.0.4:8088"
+}
+Node2 count:
+{
+  "count": 3,
+  "node_id": "172.18.0.2:8089"
+}
+Node3 count:
+{
+  "count": 3,
+  "node_id": "172.18.0.3:8090"
+}
+
+✅ Existing peer removal test completed!
+🎯 Full test sequence completed!
+(base) shubhamgautam@shubhams-MacBook-Air assignment-advance % 
+
+
+
+
 
 
 
