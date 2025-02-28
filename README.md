@@ -1,53 +1,101 @@
 
-# Distributed Counter
+# Distributed Counter System
 
-A distributed counter service that maintains consistent counts across multiple nodes.
+A robust distributed counter system built with Go, featuring peer discovery, fault tolerance, and automatic synchronization between nodes.
 
-## Features
+## Overview
 
-- Peer-to-peer architecture
-- Automatic service discovery via UDP multicast
-- HTTP API for counter operations
-- Automatic peer health checking
-- Counter value propagation to maintain consistency
+This distributed system implements a shared counter that remains consistent across multiple nodes. Key features include:
+
+- Real-time counter synchronization across all nodes
+- Automatic peer discovery through UDP broadcasting
+- HTTP API for counter operations and peer management
+- Health checking and automatic peer removal on failure
+- Fault tolerance with automatic recovery
+- Docker-based deployment for easy testing and scaling
+
+## Architecture
+
+The system consists of:
+
+- **Counter Service**: Manages the counter state with thread-safe operations
+- **Peers Manager**: Handles peer registration, discovery, and health checking
+- **Discovery Service**: Enables automatic peer detection via UDP broadcasting
+- **HTTP Handlers**: Provides REST API endpoints for system interaction
 
 ## Getting Started
 
 ### Prerequisites
 
-- Go 1.21 or higher
-- Docker (optional for containerized deployment)
+- Docker and Docker Compose
+- Make (for running commands)
+- curl (for testing)
 
 
-## API Endpoints
+## Testing
 
-- `GET /count` - Get the current counter value
-- `POST /increment` - Increment the counter
-- `POST /sync` - Sync counter with provided value
-- `GET /peers` - List all known peers
-- `POST /register` - Register a new peer
-- `POST /remove-peer` - Remove a peer
-- `GET /health` - Check node health
-- `GET /discovery` - Get discovery information
-
-## Architecture
-
-The system is designed with the following components:
-
-- **Config**: Application configuration and node identification
-- **Counter**: Manages the counter value with thread-safe operations
-- **Discovery**: Handles peer discovery via UDP broadcasts
-- **Peers**: Manages peer connections and health checks
-- **Handlers**: HTTP API handlers for all endpoints
-
-## License
-
-MIT
-Run [make]
+The system includes comprehensive tests to verify functionality:
 
 
+# Run all tests
+make test-full
 
-Run [make test-full]
+
+# Check node health
+make test-health
+
+# Check counter values across nodes
+make test-count
+
+# List peers for all nodes
+make test-all-peers
+
+
+# Test counter increment
+make test-increment
+
+# Test automatic peer discovery
+make test-discovery
+
+
+# Test peer removal and re-addition functionality
+make test-remove-existing-peer
+
+
+
+# Test peer registration
+make test-peers
+
+
+# Test counter synchronization
+make test-sync
+```
+
+### Test Explanations
+
+- **test-health**: Verifies all nodes are responsive and operational
+- **test-count**: Shows current counter values on all nodes, confirming synchronization
+- **test-discovery**: Demonstrates automatic discovery of new nodes
+- **test-all-peers**: Lists all peer connections across nodes
+- **test-peers**: Tests manual peer registration functionality
+- **test-increment**: Increments the counter on one node and verifies propagation
+- **test-sync**: Tests explicit counter synchronization across nodes
+- **test-remove-existing-peer**: Tests system behavior when a node is removed and re-added
+
+## API Reference
+
+The system exposes the following HTTP endpoints:
+
+- **GET /health**: Check node health
+- **GET /count**: Get current counter value
+- **POST /increment**: Increment counter and propagate to peers
+- **POST /sync**: Update counter to match provided value if greater
+- **GET /peers**: List known peers
+- **POST /register**: Register a new peer
+- **POST /remove-peer**: Remove a peer
+- **GET /discovery**: Get discovery information
+
+
 
 <img width="1470" alt="Screenshot 2025-02-26 at 12 33 30 PM" src="https://github.com/user-attachments/assets/b5d14ce9-e502-4d5b-8df2-45b5ba1cd80f" />
 <img width="1470" alt="Screenshot 2025-02-27 at 8 27 43 PM" src="https://github.com/user-attachments/assets/210aae72-43b7-4396-aa5a-12d6fa60945f" />
