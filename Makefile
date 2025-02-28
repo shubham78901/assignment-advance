@@ -123,9 +123,62 @@ test-discovery: clean-test-node
 	
 	@echo "\n✅ Service discovery test completed!"
 
-test-full: test-health test-increment test-sync test-count  test-all-peers test-discovery
-	@echo "🎯 Full test sequence completed!"
 
+
+test-remove-existing-peer:
+	@echo "🔍 Testing removal of an existing peer..."
+	@echo "1. Checking current peers on all nodes:"
+	@echo "Node1 peers:"; curl -s http://localhost:$(PORT_1)/peers | jq .
+	@echo "Node2 peers:"; curl -s http://localhost:$(PORT_2)/peers | jq .
+	@echo "Node3 peers:"; curl -s http://localhost:$(PORT_3)/peers | jq .
+	
+	@echo "\n2. Removing Node3 from Node1 and Node2's peer lists..."
+	@NODE3_ID=$$(curl -s http://localhost:$(PORT_3)/health | jq -r '.node_id') && \
+	echo "Node3 ID: $$NODE3_ID" && \
+	curl -X POST -H "Content-Type: application/json" -d "{\"id\": \"$$NODE3_ID\"}" http://localhost:$(PORT_1)/remove-peer && \
+	curl -X POST -H "Content-Type: application/json" -d "{\"id\": \"$$NODE3_ID\"}" http://localhost:$(PORT_2)/remove-peer
+	@sleep 2
+	
+	@echo "\n3. Verifying Node3 was removed from peer lists:"
+	@echo "Node1 peers:"; curl -s http://localhost:$(PORT_1)/peers | jq .
+	@echo "Node2 peers:"; curl -s http://localhost:$(PORT_2)/peers | jq .
+	
+	@echo "\n4. Testing counter propagation with removed peer..."
+	@echo "Incrementing counter on Node1..."
+	@curl -X POST http://localhost:$(PORT_1)/increment
+	@sleep 5
+	
+	@echo "\n5. Checking if counter updated on Node2 but not on Node3:"
+	@echo "Node1 count:"; curl -s http://localhost:$(PORT_1)/count | jq .
+	@echo "Node2 count:"; curl -s http://localhost:$(PORT_2)/count | jq .
+	@echo "Node3 count:"; curl -s http://localhost:$(PORT_3)/count | jq .
+	
+	@echo "\n6. Re-adding Node3 to restore network..."
+	@NODE3_ID=$$(curl -s http://localhost:$(PORT_3)/health | jq -r '.node_id') && \
+	curl -X POST -H "Content-Type: application/json" -d "{\"id\": \"$$NODE3_ID\"}" http://localhost:$(PORT_1)/register && \
+	curl -X POST -H "Content-Type: application/json" -d "{\"id\": \"$$NODE3_ID\"}" http://localhost:$(PORT_2)/register
+	@sleep 2
+	
+	@echo "\n7. Verifying Node3 was added back:"
+	@echo "Node1 peers:"; curl -s http://localhost:$(PORT_1)/peers | jq .
+	@echo "Node2 peers:"; curl -s http://localhost:$(PORT_2)/peers | jq .
+	
+	@echo "\n8. Explicitly syncing Node3 with the current counter value..."
+	@CURRENT_COUNT=$$(curl -s http://localhost:$(PORT_1)/count | jq '.count') && \
+	echo "Current count from Node1: $$CURRENT_COUNT" && \
+	curl -X POST -H "Content-Type: application/json" -d "{\"count\": $$CURRENT_COUNT}" http://localhost:$(PORT_3)/sync
+	@sleep 3
+	
+	@echo "\n9. Verifying all nodes have the same counter value:"
+	@echo "Node1 count:"; curl -s http://localhost:$(PORT_1)/count | jq .
+	@echo "Node2 count:"; curl -s http://localhost:$(PORT_2)/count | jq .
+	@echo "Node3 count:"; curl -s http://localhost:$(PORT_3)/count | jq .
+	
+	@echo "\n✅ Existing peer removal test completed!"
+
+test-full: test-health test-increment test-sync test-count test-all-peers  test-discovery test-remove-existing-peer
+	@echo "🎯 Full test sequence completed!"
+	
 remove-containers:
 	@echo "🗑️ Removing containers..."
 	@docker rm -f node1 node2 node3 2>/dev/null || true
