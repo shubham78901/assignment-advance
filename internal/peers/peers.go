@@ -29,26 +29,11 @@ func New(nodeID string) *PeersManager {
 		peers:  make(map[string]bool),
 	}
 }
-
-// SetupInitialPeers configures initial peers from environment or command line
-func (pm *PeersManager) SetupInitialPeers(peerList string, args []string) {
+func (pm *PeersManager) SetupInitialPeers(peerList string) {
 	if peerList != "" {
 		for _, peer := range strings.Split(peerList, ",") {
 			if peer != pm.nodeID {
 				pm.AddPeer(peer)
-			}
-		}
-	}
-
-	if len(args) > 1 {
-		for _, arg := range args[1:] {
-			if strings.HasPrefix(arg, "--peers=") {
-				peerList := strings.TrimPrefix(arg, "--peers=")
-				for _, peer := range strings.Split(peerList, ",") {
-					if peer != pm.nodeID {
-						pm.AddPeer(peer)
-					}
-				}
 			}
 		}
 	}

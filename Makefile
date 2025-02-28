@@ -123,7 +123,7 @@ test-discovery: clean-test-node
 	
 	@echo "\n✅ Service discovery test completed!"
 
-test-full: test-health test-increment test-sync test-count test-peers test-all-peers test-discovery
+test-full: test-health test-increment test-sync test-count  test-all-peers test-discovery
 	@echo "🎯 Full test sequence completed!"
 
 remove-containers:

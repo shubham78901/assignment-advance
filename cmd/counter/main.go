@@ -8,7 +8,6 @@ import (
 	"assignmet/advance/internal/peers"
 	"fmt"
 	"net/http"
-	"os"
 )
 
 func main() {
@@ -22,7 +21,7 @@ func main() {
 	peersManager := peers.New(cfg.NodeID)
 
 	// Setup initial peers from environment or command line
-	peersManager.SetupInitialPeers(cfg.PeerList, os.Args)
+	peersManager.SetupInitialPeers(cfg.PeerList)
 
 	// Initialize service discovery if enabled
 	if cfg.DiscoveryEnabled {
