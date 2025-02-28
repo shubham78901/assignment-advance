@@ -113,6 +113,9 @@ The system exposes the following HTTP endpoints:
 
 
 
+............................................CONSOLE-LOGS..................................................................
+
+
 (base) shubhamgautam@shubhams-MacBook-Air assignment-advance % make test-full
 🩺 Checking health of all nodes...
 Node1:
