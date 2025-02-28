@@ -37,7 +37,7 @@ The system consists of:
 
 The system includes comprehensive tests to verify functionality:
 
-# Run Build counters and start
+# Run  Build containers and start
 
 [make]
 
