@@ -37,9 +37,13 @@ The system consists of:
 
 The system includes comprehensive tests to verify functionality:
 
-# Run  Build containers and start
+# Run Build containers and start
 
 [make]
+
+# Run To see all logs
+
+[make logs]
 
 
 # Run all tests
