@@ -97,16 +97,16 @@ The system exposes the following HTTP endpoints:
 
 
 
+
+
+
+
+
+
+
+
 <img width="1470" alt="Screenshot 2025-02-26 at 12 33 30 PM" src="https://github.com/user-attachments/assets/b5d14ce9-e502-4d5b-8df2-45b5ba1cd80f" />
 <img width="1470" alt="Screenshot 2025-02-27 at 8 27 43 PM" src="https://github.com/user-attachments/assets/210aae72-43b7-4396-aa5a-12d6fa60945f" />
 
 <img width="1470" alt="Screenshot 2025-02-27 at 8 28 09 PM" src="https://github.com/user-attachments/assets/a209d0b5-c7bd-428c-93da-3086a770ac35" />
 <img width="1470" alt="Screenshot 2025-02-27 at 8 28 04 PM" src="https://github.com/user-attachments/assets/1716de47-6067-4e0b-a27e-fe3ee40c0eb0" />
-
-
-
-
-
-
-
-
