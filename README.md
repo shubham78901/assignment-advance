@@ -37,39 +37,49 @@ The system consists of:
 
 The system includes comprehensive tests to verify functionality:
 
+# Run Build counters and start
+
+[make]
+
 
 # Run all tests
-make test-full
+[make test-full]
+
 
 
 # Check node health
-make test-health
+[make test-health]
 
-# Check counter values across nodes
-make test-count
+
 
 # List peers for all nodes
-make test-all-peers
+[make test-all-peers]
 
 
 # Test counter increment
-make test-increment
+[make test-increment]
+
+
+# Check counter values across nodes
+[make test-count]
+
+
 
 # Test automatic peer discovery
-make test-discovery
+[make test-discovery]
+
 
 
 # Test peer removal and re-addition functionality
-make test-remove-existing-peer
-
+[make test-remove-existing-peer]
 
 
 # Test peer registration
-make test-peers
+[make test-peers]
 
 
 # Test counter synchronization
-make test-sync
+[make test-sync]
 ```
 
 ### Test Explanations
